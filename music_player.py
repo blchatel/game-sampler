@@ -19,11 +19,8 @@ class MusicPlayer:
     def __init__(self, config_file: str, music_dir: str):
         """Construct and run the MusicPlayer"""
 
-        pygame.init()
-
         songs = self._load_song_configs(config_file, music_dir)
         ui = self._setup_ui(songs)
-
         ui.mainloop()
 
     @staticmethod
@@ -60,8 +57,12 @@ class MusicPlayer:
     @staticmethod
     def _play(song: Song) -> None:
         """Play the music at given timecode"""
-        pygame.mixer.music.load(song.filepath)
-        pygame.mixer.music.play(start=song.timecode)
+        try:
+            pygame.mixer.music.load(song.filepath)
+            pygame.mixer.music.play(start=song.timecode)
+        except pygame.error:
+            pygame.init()
+            MusicPlayer._play(song)
 
     @staticmethod
     def _play_random(songs: list[Song]) -> None:
