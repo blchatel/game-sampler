@@ -11,7 +11,7 @@ A simple music player program for easy triggering of preconfigured and preloaded
 
 ## Requirements
 
-- Python 3.x
+- Python 3.10+
 - [Pygame](https://pypi.org/project/pygame/)
 - [ConfigParser](https://pypi.org/project/configparser/)
 - [Tkinter](https://docs.python.org/3/library/tkinter.html)
