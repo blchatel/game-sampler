@@ -7,7 +7,20 @@ from collections import namedtuple
 
 import pygame
 
-Song = namedtuple('Song', ['filepath', 'title', 'artist', 'timecode', 'key'])
+class Song(namedtuple('Song', ['filepath', 'title', 'artist', 'timecode', 'key', 'category'])):
+
+    def __repr__(self) -> str:
+        """Return a string representation of the song for debugging"""
+        return f'<Song {self.title} - {self.artist}>'
+
+    @property
+    def text(self) -> str:
+        """Return a string representation of the song for button"""
+        text = f'{self.title}\n{self.artist}'
+        if self.key:
+            text += f'\n({self.key})'
+        return text
+
 
 B_WIDTH = 130
 B_HEIGHT = 90
