@@ -93,7 +93,7 @@ class MusicPlayer:
         pygame.mixer.music.unload()
 
     @staticmethod
-    def _setup_ui(songs: list[Song], n_rows: int = 5, n_cols: int = 9) -> tk.Tk:
+    def _setup_ui(songs: list[Song], n_rows: int = 6, n_cols: int = 9) -> tk.Tk:
         """Set up a minimalist UI with one tab per category and one button + one binding key per song"""
 
         categories = {song.category: [] for song in songs if song.category}
@@ -128,7 +128,7 @@ class MusicPlayer:
             for i, song in enumerate(category_songs):
                 row = i // n_cols
                 col = i % n_cols
-                if row > n_rows:
+                if row >= n_rows:
                     print(f'Warning: {song} cannot be displayed in {category} tab - too many songs')
                     continue
                 button = tk.Button(tab, text=song.text, command=lambda s=song: MusicPlayer._play(s))
