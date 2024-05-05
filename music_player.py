@@ -89,8 +89,11 @@ class MusicPlayer:
     @staticmethod
     def _stop() -> None:
         """Stop the music"""
-        pygame.mixer.music.stop()
-        pygame.mixer.music.unload()
+        try:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+        except pygame.error:
+            pass
 
     @staticmethod
     def _setup_ui(songs: list[Song], n_rows: int = 6, n_cols: int = 9) -> tk.Tk:
@@ -155,6 +158,7 @@ class MusicPlayer:
         root.geometry(f'{total_width}x{total_height}')
 
         notebook.pack(fill='both', expand=True)
+        notebook.bind("<<NotebookTabChanged>>", lambda event: root.focus_set())
 
         root.protocol('WM_DELETE_WINDOW', lambda: root.destroy())
 
