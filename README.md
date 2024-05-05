@@ -8,6 +8,7 @@ A simple music player program for easy triggering of preconfigured and preloaded
 - Plays songs at specified timecodes.
 - Provides keyboard shortcuts for playing, stopping, and playing random songs.
 - Minimalist user interface with buttons for each song.
+- One tab per category of song with a dedicated "play random" button
 
 ## Requirements
 
@@ -59,6 +60,7 @@ title = Song Title
 artist = "Artist Name"
 timecode = 10
 key = s
+category = category_name
 
 [song2]
 filename = song2.mp3
@@ -66,6 +68,7 @@ title = "Another Song"
 artist = "Another Artist"
 timecode = 20
 key = a
+category = category_name
 ```
 
 Each song is defined under a section (e.g., [song1]).
@@ -75,7 +78,8 @@ Each song is defined under a section (e.g., [song1]).
 - `artist` (optional) specifies the artist of the song.
 - `timecode` (optional) specifies the time in seconds where the song should start playing. Default 0.
 - `key` (optional) specifies the keyboard shortcut for the song.
+- `category` (optional) specifies the category for the song. Each song belongs to specified category + "all"
 
 Note: Quotes (") are optional but can help in case of title and artist with space or special char
 
-Note: the key are case-sensitive and `<return>` and `<space>` are reserved key
+Note: the key are case-sensitive and `<space>` + all numeric key are reserved key
