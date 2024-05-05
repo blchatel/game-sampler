@@ -3,6 +3,7 @@ import configparser
 import os
 import random
 import tkinter as tk
+from tkinter import ttk
 from collections import namedtuple
 
 import pygame
@@ -31,7 +32,6 @@ class MusicPlayer:
 
     def __init__(self, config_file: str, music_dir: str):
         """Construct and run the MusicPlayer"""
-
         songs = self._load_song_configs(config_file, music_dir)
         ui = self._setup_ui(songs)
         ui.mainloop()
@@ -60,10 +60,11 @@ class MusicPlayer:
                 title=config.get(section, 'title').strip('"'),
                 artist=config.get(section, 'artist', fallback='Unknown Artist').strip('"'),
                 timecode=config.getint(section, 'timecode', fallback=0),
-                key=config.get(section, 'key', fallback='').strip('"')
+                key=config.get(section, 'key', fallback='').strip('"'),
+                category=config.get(section, 'category', fallback='').strip('"')
             )
-            if song.key in ['<Return>', '<space>']:
-                raise ValueError(f'Key {song.key} is reserved')
+            if song.key in ['<space>', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+                raise ValueError(f'Key {song.key} is reserved for stop/categories')
             songs.append(song)
         return songs
 
@@ -78,7 +79,10 @@ class MusicPlayer:
             MusicPlayer._play(song)
 
     @staticmethod
-    def _play_random(songs: list[Song]) -> None:
+    def _play_random(songs: list[Song], category: str = 'all') -> None:
+        """Play a randomly selected music. Given song can be filtered by given category"""
+        if category != 'all':
+            songs = [song for song in songs if song.category == category]
         i = random.randint(0, len(songs) - 1)
         MusicPlayer._play(songs[i])
 
@@ -90,45 +94,69 @@ class MusicPlayer:
 
     @staticmethod
     def _setup_ui(songs: list[Song], n_rows: int = 5, n_cols: int = 9) -> tk.Tk:
-        """Set up a minimalist UI with one button and one binding key per song"""
+        """Set up a minimalist UI with one tab per category and one button + one binding key per song"""
+
+        categories = {song.category: [] for song in songs if song.category}
+        categories['all'] = []
+        n_cat = len(categories)
+
         root = tk.Tk()
         root.resizable(False, False)
         root.title('Game Music Player')
 
+        header_height = 25
+        wide_width = (n_cols * B_WIDTH) / (n_cat + 1)
+
+        tabs = {}
+        notebook = ttk.Notebook(root)
+        for category in categories:
+            tab = ttk.Frame(notebook)
+            tabs[category] = tab
+            notebook.add(tab, text=category)
+
         for i, song in enumerate(songs):
-            row = i // n_cols
-            col = i % n_cols
-            if row > n_rows:
-                continue
-
-            text = f'{song.title}\n{song.artist}'
             if song.key:
-                text += f'\n({song.key})'
                 root.bind(song.key, lambda event, s=song: MusicPlayer._play(s))
-            button = tk.Button(root, text=text, command=lambda s=song: MusicPlayer._play(s))
-            button.place(x=col*B_WIDTH, y=row*B_HEIGHT, width=B_WIDTH, height=B_HEIGHT)
+            if song.category:
+                categories[song.category].append(song)
+            categories['all'].append(song)
 
-        for i in range(len(songs), n_rows*n_cols):
-            row = i // n_cols
-            col = i % n_rows
-            button = tk.Button(root)
-            button.place(x=col*B_WIDTH, y=row*B_HEIGHT, width=B_WIDTH, height=B_HEIGHT)
+        for n, (category, category_songs) in enumerate(categories.items()):
 
-        wide_width = n_cols / 2 * B_WIDTH
+            tab = tabs[category]
 
-        root.bind("<Return>", lambda event: MusicPlayer._play_random(songs))
-        random_button = tk.Button(root, text='Random Music\n<enter>', command=lambda: MusicPlayer._play_random(songs))
-        random_button.place(x=0, y=n_rows * B_HEIGHT, width=wide_width, height=B_HEIGHT)
+            for i, song in enumerate(category_songs):
+                row = i // n_cols
+                col = i % n_cols
+                if row > n_rows:
+                    print(f'Warning: {song} cannot be displayed in {category} tab - too many songs')
+                    continue
+                button = tk.Button(tab, text=song.text, command=lambda s=song: MusicPlayer._play(s))
+                button.place(x=col*B_WIDTH, y=row*B_HEIGHT, width=B_WIDTH, height=B_HEIGHT)
 
-        root.bind("<space>", lambda event: MusicPlayer._stop())
-        stop_button = tk.Button(root, text='Stop Music\n<space>', command=MusicPlayer._stop)
-        stop_button.place(x=wide_width, y=n_rows * B_HEIGHT, width=wide_width, height=B_HEIGHT)
+            for i in range(len(category_songs), n_rows*n_cols):
+                row = i // n_cols
+                col = i % n_cols
+                button = tk.Button(tab)
+                button.place(x=col*B_WIDTH, y=row*B_HEIGHT, width=B_WIDTH, height=B_HEIGHT)
+
+            text = f'Random {category}\n<{n+1}>'
+            root.bind(f'{n+1}', lambda event, c=category: MusicPlayer._play_random(songs, c))
+            random_button = tk.Button(root, text=text, command=lambda c=category: MusicPlayer._play_random(songs, c))
+            random_button.place(x=n*wide_width, y=n_rows*B_HEIGHT + header_height, width=wide_width, height=B_HEIGHT)
+
+        text = 'Stop Music\n<space>'
+        root.bind('<space>', lambda event: MusicPlayer._stop())
+        stop_button = tk.Button(root, text=text, command=MusicPlayer._stop)
+        stop_button.place(x=wide_width*n_cat, y=n_rows*B_HEIGHT + header_height, width=wide_width, height=B_HEIGHT)
 
         total_width = n_cols * B_WIDTH
-        total_height = (n_rows + 1) * B_HEIGHT
+        total_height = (n_rows + 1) * B_HEIGHT + header_height
         root.geometry(f'{total_width}x{total_height}')
 
-        root.protocol("WM_DELETE_WINDOW", lambda: root.destroy())
+        notebook.pack(fill='both', expand=True)
+
+        root.protocol('WM_DELETE_WINDOW', lambda: root.destroy())
 
         return root
 
